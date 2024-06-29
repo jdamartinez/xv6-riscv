@@ -7,9 +7,9 @@
 #include "defs.h"
 #include "schedInfo.h"
 
-struct schedInfo info[]; //project 3 
-int TotalTokens;         //project 3
-uint64 token=1;          //project 3, set token to 1
+struct schedInfo info[32]; //project 3 global array with size 32
+int TotalTokens;           //project 3 variable for tokens
+uint64 token=1;            //project 3, set token to 1
 
 struct cpu cpus[NCPU];
 
@@ -723,8 +723,9 @@ procdump(void)
 
 //project 3, schedDisp function 
 void
-schedDisp(){
+schedDisp(int user_dst, uint64 dst, void *src, uint64 len){
+
     uint64 p;
   argaddr(0, &p);
-  //copyout(&p, dst, src, len);
+  return copyout(&p, dst, src, len);
 }
