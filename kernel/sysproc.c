@@ -6,6 +6,22 @@
 #include "spinlock.h"
 #include "proc.h"
 
+
+uint64
+setToken(void){           //project 3 set token value
+  int token;
+
+  argint(0,&token);     //sets token to number given
+
+  if(token <1 | token >32){
+    printf("token value out of range");   //error if token is less then one or more then 32
+    return -1;
+  }
+
+  return token;  //returns the value of token if no error
+}
+
+
 uint64
 sys_exit(void)
 {
@@ -88,4 +104,12 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+uint64
+sys_timeins(void)
+{
+int Time = r_time()/CPUfreq;
+return Time;
+
 }

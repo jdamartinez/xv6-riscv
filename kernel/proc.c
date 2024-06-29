@@ -5,6 +5,11 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "defs.h"
+#include "schedInfo.h"
+
+struct schedInfo info[]; //project 3 
+int TotalTokens;         //project 3
+uint64 token=1;          //project 3, set token to 1
 
 struct cpu cpus[NCPU];
 
@@ -25,6 +30,13 @@ extern char trampoline[]; // trampoline.S
 // memory model when using p->parent.
 // must be acquired before any p->lock.
 struct spinlock wait_lock;
+
+int                       //project 3 random # function 
+random(TotalTokens){
+  int r=rand()%TotalTokens;
+  return r;
+}
+
 
 // Allocate a page for each process's kernel stack.
 // Map it high in memory, followed by an invalid
@@ -441,34 +453,61 @@ wait(uint64 addr)
 //  - swtch to start running that process.
 //  - eventually that process transfers control
 //    via swtch back to the scheduler.
+// ***********************************************************orginal code
+//void
+//scheduler(void)
+//{
+//  struct proc *p;
+//  struct cpu *c = mycpu();
+//  
+//  c->proc = 0;
+//  for(;;){
+//    // Avoid deadlock by ensuring that devices can interrupt.
+//    intr_on();
+//
+//    for(p = proc; p < &proc[NPROC]; p++) {
+//      acquire(&p->lock);
+//      if(p->state == RUNNABLE) {
+//        // Switch to chosen process.  It is the process's job
+//        // to release its lock and then reacquire it
+//        // before jumping back to us.
+//        p->state = RUNNING;
+//        c->proc = p;
+//        swtch(&c->context, &p->context);
+//
+//        // Process is done running for now.
+//        // It should have changed its p->state before coming back.
+//        c->proc = 0;
+//      }
+//      release(&p->lock);
+//    }
+//  }
+//}
+//*************************************************************************
+
+//project 3, lottery scheduler
 void
 scheduler(void)
 {
-  struct proc *p;
-  struct cpu *c = mycpu();
-  
-  c->proc = 0;
-  for(;;){
-    // Avoid deadlock by ensuring that devices can interrupt.
-    intr_on();
+struct proc *p;
+struct cpu *c = mycpu();
+TotalTokens=0;
 
-    for(p = proc; p < &proc[NPROC]; p++) {
-      acquire(&p->lock);
-      if(p->state == RUNNABLE) {
-        // Switch to chosen process.  It is the process's job
-        // to release its lock and then reacquire it
-        // before jumping back to us.
-        p->state = RUNNING;
-        c->proc = p;
-        swtch(&c->context, &p->context);
+for(;;){
+intr_on(); //allows interrupt
+acquire(&p->lock);
 
-        // Process is done running for now.
-        // It should have changed its p->state before coming back.
-        c->proc = 0;
-      }
-      release(&p->lock);
-    }
+ for(p = proc; p < &proc[NPROC]; p++){
+  if(p->state == RUNNABLE){
+    TotalTokens += p->token;
   }
+ }
+ int n = random(TotalTokens);
+proc[n].state = RUNNING;
+c->proc = p;
+swtch(&c->context, &p->context);
+release(&p->lock);
+}
 }
 
 // Switch to scheduler.  Must hold only p->lock
@@ -680,4 +719,12 @@ procdump(void)
     printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
   }
+}
+
+//project 3, schedDisp function 
+void
+schedDisp(){
+    uint64 p;
+  argaddr(0, &p);
+  //copyout(&p, dst, src, len);
 }
