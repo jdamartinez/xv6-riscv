@@ -6,9 +6,11 @@
 #include "proc.h"
 #include "defs.h"
 #include "schedInfo.h"
+#include <stdlib.h>
 
 struct schedInfo info[32]; //project 3 global array with size 32
-int TotalTokens;           //project 3 variable for tokens
+
+uint TotalTokens;           //project 3 variable for tokens
 uint64 token=1;            //project 3, set token to 1
 
 struct cpu cpus[NCPU];
@@ -32,8 +34,8 @@ extern char trampoline[]; // trampoline.S
 struct spinlock wait_lock;
 
 int                       //project 3 random # function 
-random(TotalTokens){
-  int r=rand()%TotalTokens;
+randomtoken(int){
+  int r=rand() % TotalTokens;
   return r;
 }
 
@@ -491,18 +493,19 @@ scheduler(void)
 {
 struct proc *p;
 struct cpu *c = mycpu();
+c->proc =0;
 TotalTokens=0;
 
 for(;;){
 intr_on(); //allows interrupt
-acquire(&p->lock);
 
  for(p = proc; p < &proc[NPROC]; p++){
+  acquire(&p->lock);
   if(p->state == RUNNABLE){
     TotalTokens += p->token;
   }
  }
- int n = random(TotalTokens);
+ int n = randomtoken(TotalTokens);
 proc[n].state = RUNNING;
 c->proc = p;
 swtch(&c->context, &p->context);
@@ -722,9 +725,11 @@ procdump(void)
 }
 
 //project 3, schedDisp function 
-void
+int
 schedDisp(int user_dst, uint64 dst, void *src, uint64 len){
-
+for(int i=0; i<32; i++){ //sets pid to -1 for global array
+  info[i].pid= -1;
+}
     uint64 p;
   argaddr(0, &p);
   return copyout(&p, dst, src, len);

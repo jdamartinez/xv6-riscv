@@ -13,7 +13,7 @@ setToken(void){           //project 3 set token value
 
   argint(0,&token);     //sets token to number given
 
-  if(token <1 | token >32){
+  if((token <1) | (token >32)){
     printf("token value out of range");   //error if token is less then one or more then 32
     return -1;
   }
